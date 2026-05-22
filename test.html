@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignalR Chat Test</title>
+</head>
+<body>
+    <h1>SignalR Chat Test</h1>
+
+    <div>
+        <label>API Base URL</label>
+        <input id="baseUrl" value="http://localhost:5258" style="width: 300px;">
+    </div>
+
+    <br>
+
+    <div>
+        <label>Token</label>
+        <input id="token" style="width: 800px;">
+    </div>
+
+    <br>
+
+    <div>
+        <label>Room Id</label>
+        <input id="roomId" value="1">
+    </div>
+
+    <br>
+
+    <button onclick="connect()">Connect</button>
+    <button onclick="joinRoom()">Join Room</button>
+    <button onclick="leaveRoom()">Leave Room</button>
+
+    <br><br>
+
+    <input id="message" value="merhaba signalr" style="width: 400px;">
+    <button onclick="sendMessage()">Send Message</button>
+    <button onclick="markAsRead()">Mark As Read</button>
+
+    <pre id="log"></pre>
+
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+
+    <script>
+        let connection;
+
+        function log(message) {
+            document.getElementById("log").textContent += message + "\n";
+        }
+
+        async function connect() {
+            const baseUrl = document.getElementById("baseUrl").value;
+            const token = document.getElementById("token").value;
+
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(`${baseUrl}/chatHub?access_token=${token}`)
+                .withAutomaticReconnect()
+                .build();
+
+            connection.on("Connected", data => {
+                log("Connected: " + JSON.stringify(data));
+            });
+
+            connection.on("UserJoinedRoom", data => {
+                log("UserJoinedRoom: " + JSON.stringify(data));
+            });
+
+            connection.on("UserLeftRoom", data => {
+                log("UserLeftRoom: " + JSON.stringify(data));
+            });
+
+            connection.on("ReceiveMessage", message => {
+                log("ReceiveMessage: " + JSON.stringify(message));
+            });
+
+            connection.on("MessageRead", data => {
+                log("MessageRead: " + JSON.stringify(data));
+            });
+
+            await connection.start();
+            log("SignalR connection started.");
+        }
+
+        async function joinRoom() {
+            const roomId = Number(document.getElementById("roomId").value);
+            await connection.invoke("JoinRoom", roomId);
+            log("JoinRoom invoked.");
+        }
+
+        async function leaveRoom() {
+            const roomId = Number(document.getElementById("roomId").value);
+            await connection.invoke("LeaveRoom", roomId);
+            log("LeaveRoom invoked.");
+        }
+
+        async function sendMessage() {
+            const roomId = Number(document.getElementById("roomId").value);
+            const message = document.getElementById("message").value;
+            await connection.invoke("SendMessage", roomId, message);
+            log("SendMessage invoked.");
+        }
+
+        async function markAsRead() {
+            const roomId = Number(document.getElementById("roomId").value);
+            await connection.invoke("MarkAsRead", roomId);
+            log("MarkAsRead invoked.");
+        }
+    </script>
+</body>
+</html>

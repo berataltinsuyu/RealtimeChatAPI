@@ -8,6 +8,7 @@ using RealtimeChatAPI.Infrastructure.Data;
 using RealtimeChatAPI.Infrastructure.Repositories;
 using RealtimeChatAPI.API.Hubs;
 using RealtimeChatAPI.API.Middleware;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +41,43 @@ builder.Services.AddSingleton<IOnlineUserService, OnlineUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IMessageService, MesssageService>();
+
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Realtime Chat API",
+        Version = "v1",
+        Description = "ASP.NET Core, SignalR, JWT ve EF Core ile geliştirilmiş gerçek zamanlı chat API projesi."
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT token giriniz. Örnek: Bearer eyJhbGciOi..."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
 
@@ -89,6 +127,14 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    app.UseSwagger();
+
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Realtime Chat API v1");
+        options.RoutePrefix = "swagger";
+    });
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

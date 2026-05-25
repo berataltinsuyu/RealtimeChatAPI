@@ -7,6 +7,7 @@ using RealtimeChatAPI.Domain.Interfaces;
 using RealtimeChatAPI.Infrastructure.Data;
 using RealtimeChatAPI.Infrastructure.Repositories;
 using RealtimeChatAPI.API.Hubs;
+using RealtimeChatAPI.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +91,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseCors("AllowLocalTestClient");
 

@@ -9,6 +9,9 @@ using RealtimeChatAPI.Infrastructure.Repositories;
 using RealtimeChatAPI.API.Hubs;
 using RealtimeChatAPI.API.Middleware;
 using Microsoft.OpenApi.Models;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using RealtimeChatAPI.API.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +44,8 @@ builder.Services.AddSingleton<IOnlineUserService, OnlineUserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IMessageService, MesssageService>();
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterRequestValidator>();
 
 builder.Services.AddEndpointsApiExplorer();
 

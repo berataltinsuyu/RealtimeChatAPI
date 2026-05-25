@@ -59,13 +59,18 @@ public class RoomsController : ControllerBase
     }
 
     [HttpGet("{id:int}/online")]
-    public ActionResult<List<OnlineUserResponse>> GetOnlineUsers(int id)
+    public async Task<ActionResult<List<OnlineUserResponse>>> GetOnlineUsers(int id)
     {
-        var response = _onlineUserService.GetOnlineUsers();
+        var members = await _roomService.GetMembersAsync(id);
+
+        var memberIds = members
+            .Select(member => member.UserId)
+            .ToList();
+
+        var response = _onlineUserService.GetOnlineUsersByIds(memberIds);
 
         return Ok(response);
     }
-
     
 
     private int GetCurrentUserId()

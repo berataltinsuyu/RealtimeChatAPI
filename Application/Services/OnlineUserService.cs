@@ -59,6 +59,17 @@ public class OnlineUserService : IOnlineUserService
             })
             .ToList();
     }
+    public List<OnlineUserResponse> GetOnlineUsersByIds(List<int> userIds)
+{
+    return _onlineUsers.Values
+        .Where(user => userIds.Contains(user.UserId))
+        .Select(user => new OnlineUserResponse
+        {
+            UserId = user.UserId,
+            Username = user.Username
+        })
+        .ToList();
+}
 
     private class OnlineUserConnection
     {

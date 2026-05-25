@@ -10,4 +10,5 @@ public interface IOnlineUserService
     bool IsUserOnline(int userId);
     List<int> GetOnlineUserIds();
     List<OnlineUserResponse> GetOnlineUsers();
+    List<OnlineUserResponse> GetOnlineUsersByIds(List<int> userIds);
 }

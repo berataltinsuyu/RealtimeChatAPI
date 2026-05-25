@@ -6,6 +6,8 @@ using Microsoft.IdentityModel.Tokens;
 using RealtimeChatAPI.Application.DTOs;
 using RealtimeChatAPI.Domain.Entities;
 using RealtimeChatAPI.Domain.Interfaces;
+using RealtimeChatAPI.Application.Exceptions;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace RealtimeChatAPI.Application.Services;
 
@@ -38,7 +40,7 @@ public class AuthService : IAuthService
 
         if (existingUser is not null)
         {
-            throw new Exception("Username is already taken.");
+            throw new BadRequestException("Username is already taken.");
         }
 
         var user = new User
@@ -63,26 +65,26 @@ public class AuthService : IAuthService
     {
         if (string.IsNullOrWhiteSpace(request.Username))
         {
-            throw new Exception("Username is required.");
+            throw new BadRequestException("Username is required.");
         }
 
         if (string.IsNullOrWhiteSpace(request.Password))
         {
-            throw new Exception("Password is required.");
+            throw new BadRequestException("Password is required.");
         }
 
         var user = await _userRepository.GetByUsernameAsync(request.Username);
 
         if (user is null)
         {
-            throw new Exception("Invalid username or password.");
+            throw new BadRequestException("Invalid username or password.");
         }
 
         var isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
 
         if (!isPasswordValid)
         {
-            throw new Exception("Invalid username or password.");
+            throw new BadRequestException("Invalid username or password.");
         }
 
         var token = GenerateJwtToken(user);
@@ -101,7 +103,7 @@ public class AuthService : IAuthService
 
         if (string.IsNullOrWhiteSpace(secretKey))
         {
-            throw new Exception("JWT secret key is missing.");
+            throw new BadRequestException("JWT secret key is missing.");
         }
 
         var issuer = _configuration["Jwt:Issuer"];

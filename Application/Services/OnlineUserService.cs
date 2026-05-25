@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using RealtimeChatAPI.Application.DTOs;
+using RealtimeChatAPI.Application.Exceptions;
 
 namespace RealtimeChatAPI.Application.Services;
 

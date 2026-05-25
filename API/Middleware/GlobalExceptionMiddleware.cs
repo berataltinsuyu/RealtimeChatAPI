@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using RealtimeChatAPI.Application.Exceptions;
 
 namespace RealtimeChatAPI.API.Middleware;
 
@@ -32,7 +33,7 @@ public class GlobalExceptionMiddleware
     {
         _logger.LogError(exception, "An unhandled exception occurred.");
 
-        var statusCode = GetStatusCode(exception.Message);
+        var statusCode = GetStatusCode(exception);
 
         var response = new
         {
@@ -46,29 +47,15 @@ public class GlobalExceptionMiddleware
 
         await context.Response.WriteAsync(json);
     }
-
-    private static int GetStatusCode(string message)
+    private static int GetStatusCode(Exception exception)
     {
-        if (message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+        return exception switch
         {
-            return (int)HttpStatusCode.NotFound;
-        }
-
-        if (message.Contains("not member", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("uye degil", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("üye değil", StringComparison.OrdinalIgnoreCase))
-        {
-            return (int)HttpStatusCode.Forbidden;
-        }
-
-        if (message.Contains("already", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("zaten", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("cannot be empty", StringComparison.OrdinalIgnoreCase))
-        {
-            return (int)HttpStatusCode.BadRequest;
-        }
-
-        return (int)HttpStatusCode.InternalServerError;
+            NotFoundException => (int)HttpStatusCode.NotFound,
+            BadRequestException => (int)HttpStatusCode.BadRequest,
+            ForbiddenException => (int)HttpStatusCode.Forbidden,
+            UnauthorizedAccessException => (int)HttpStatusCode.Unauthorized,
+            _ => (int)HttpStatusCode.InternalServerError
+        };
     }
 }

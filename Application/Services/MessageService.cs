@@ -1,6 +1,7 @@
 using RealtimeChatAPI.Application.DTOs;
 using RealtimeChatAPI.Domain.Entities;
 using RealtimeChatAPI.Domain.Interfaces;
+using RealtimeChatAPI.Application.Exceptions;
 
 namespace RealtimeChatAPI.Application.Services;
 
@@ -23,7 +24,7 @@ public class MesssageService : IMessageService
 
         if (room is null)
         {
-            throw new Exception("Oda bulunamadi.");
+            throw new NotFoundException("Oda bulunamadi.");
         }
 
         if (page <= 0)
@@ -64,18 +65,18 @@ public class MesssageService : IMessageService
 
          if (room is null)
          {
-            throw new Exception("Oda bulunamadi.");
+            throw new NotFoundException("Oda bulunamadi.");
          }
 
          var isMember = await _roomRepository.IsUserMemberAsync(roomId, userId);
 
          if (!isMember)
         {
-          throw new Exception("Kullanici bu odanin uyesi degil.");
+          throw new ForbiddenException("Kullanici bu odanin uyesi degil.");
         }
         if (string.IsNullOrWhiteSpace(content))
         {
-          throw new Exception("Mesaj icerigi bos olamaz.");
+          throw new BadRequestException("Mesaj icerigi bos olamaz.");
         }
 
         var message = new Message
@@ -106,14 +107,14 @@ public class MesssageService : IMessageService
 
         if (room is null)
         {
-            throw new Exception("Oda bulunamadi.");
+            throw new NotFoundException("Oda bulunamadi.");
         }
 
         var isMember = await _roomRepository.IsUserMemberAsync(roomId, userId);
 
         if (!isMember)
         {
-          throw new Exception("Kullanici bu odanin uyesi degil.");
+          throw new ForbiddenException("Kullanici bu odanin uyesi degil.");
         }
 
         await _messageRepository.MarkRoomMessagesAsReadAsync(roomId, userId);

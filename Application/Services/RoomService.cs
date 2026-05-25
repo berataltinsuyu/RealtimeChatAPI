@@ -1,6 +1,7 @@
 using RealtimeChatAPI.Application.DTOs;
 using RealtimeChatAPI.Domain.Entities;
 using RealtimeChatAPI.Domain.Interfaces;
+using RealtimeChatAPI.Application.Exceptions;
 
 namespace RealtimeChatAPI.Application.Services;
 
@@ -75,11 +76,11 @@ public class RoomService : IRoomService
   {
         var room = await _roomRepository.GetByIdAsync(roomId);
         if (room == null)
-            throw new Exception("Oda Bulunamadi.");
+            throw new NotFoundException("Oda Bulunamadi.");
 
         var alreadyMember = await _roomRepository.IsUserMemberAsync(roomId, userId);
         if (alreadyMember)
-            throw new Exception("Zaten Odaya Uyesiniz.");
+            throw new BadRequestException("Zaten Odaya Uyesiniz.");
 
         await _roomRepository.AddMemberAsync(new RoomMember
         {
@@ -92,7 +93,7 @@ public class RoomService : IRoomService
   {
         var isMember = await _roomRepository.IsUserMemberAsync(roomId, userId);
         if (!isMember)
-            throw new Exception("Odaya Uye Degilsiniz.");
+            throw new ForbiddenException("Odaya Uye Degilsiniz.");
 
         await _roomRepository.RemoveMemberAsync(roomId, userId);  
   

@@ -78,6 +78,14 @@
                 log("MessageRead: " + JSON.stringify(data));
             });
 
+            connection.on("UserOnline", data => {
+                log("UserOnline: " + JSON.stringify(data));
+            });
+
+            connection.on("UserOffline", data => {
+                log("UserOffline: " + JSON.stringify(data));
+            });
+
             await connection.start();
             log("SignalR connection started.");
         }

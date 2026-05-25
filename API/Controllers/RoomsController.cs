@@ -12,10 +12,12 @@ namespace RealtimeChatAPI.API.Controllers;
 public class RoomsController : ControllerBase
 {
     private readonly IRoomService _roomService;
+    private readonly IOnlineUserService _onlineUserService;
 
-    public RoomsController(IRoomService roomService)
+    public RoomsController(IRoomService roomService, IOnlineUserService onlineUserService)
     {
         _roomService = roomService;
+        _onlineUserService = onlineUserService;
     }
 
     [HttpPost]
@@ -55,6 +57,16 @@ public class RoomsController : ControllerBase
         var response = await _roomService.GetMembersAsync(id);
         return Ok(response);
     }
+
+    [HttpGet("{id:int}/online")]
+    public ActionResult<List<OnlineUserResponse>> GetOnlineUsers(int id)
+    {
+        var response = _onlineUserService.GetOnlineUsers();
+
+        return Ok(response);
+    }
+
+    
 
     private int GetCurrentUserId()
     {

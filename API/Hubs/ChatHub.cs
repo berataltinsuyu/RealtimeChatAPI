@@ -10,13 +10,16 @@ public class ChatHub : Hub
 {
     private readonly IMessageService _messageService;
     private readonly IRoomService _roomService;
+    private readonly IOnlineUserService _onlineUserService;
 
     public ChatHub(
         IMessageService messageService,
-        IRoomService roomService)
+        IRoomService roomService,
+        IOnlineUserService onlineUserService)
     {
         _messageService = messageService;
         _roomService = roomService;
+        _onlineUserService = onlineUserService;
     }
 
 public async Task JoinRoom(int roomId)
@@ -82,23 +85,45 @@ public async Task JoinRoom(int roomId)
         });
     }
 
-    public override async Task OnConnectedAsync()
-    {
-        var userId = GetCurrentUserId();
+public override async Task OnConnectedAsync()
+{
+    var userId = GetCurrentUserId();
+    var username = GetCurrentUsername();
 
-        await Clients.Caller.SendAsync("Connected", new
+    _onlineUserService.AddUserConnection(userId, username, Context.ConnectionId);
+
+    await Clients.Caller.SendAsync("Connected", new
+    {
+        UserId = userId,
+        Username = username,
+        ConnectionId = Context.ConnectionId
+    });
+
+    await Clients.Others.SendAsync("UserOnline", new
+    {
+        UserId = userId,
+        Username = username
+    });
+
+    await base.OnConnectedAsync();
+}
+
+public override async Task OnDisconnectedAsync(Exception? exception)
+{
+    var userId = GetCurrentUserId();
+
+    _onlineUserService.RemoveUserConnection(userId, Context.ConnectionId);
+
+    if (!_onlineUserService.IsUserOnline(userId))
+    {
+        await Clients.Others.SendAsync("UserOffline", new
         {
-            UserId = userId,
-            ConnectionId = Context.ConnectionId
+            UserId = userId
         });
-
-        await base.OnConnectedAsync();
     }
 
-    public override async Task OnDisconnectedAsync(Exception? exception)
-    {
-        await base.OnDisconnectedAsync(exception);
-    }
+    await base.OnDisconnectedAsync(exception);
+}
 
     private int GetCurrentUserId()
     {
@@ -116,4 +141,16 @@ public async Task JoinRoom(int roomId)
     {
         return $"room-{roomId}";
     }
+
+    private string GetCurrentUsername()
+{
+    var usernameClaim = Context.User?.FindFirst(ClaimTypes.Name)?.Value;
+
+    if (string.IsNullOrWhiteSpace(usernameClaim))
+    {
+        throw new HubException("Username claim not found.");
+    }
+
+    return usernameClaim;
+}
 }

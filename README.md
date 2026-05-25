@@ -1,22 +1,25 @@
 # Real-Time Chat API
 
-ASP.NET Core, SignalR, JWT Authentication, Entity Framework Core ve SQLite kullanılarak geliştirilmiş gerçek zamanlı mesajlaşma backend projesidir.
+ASP.NET Core, SignalR, JWT Authentication, Entity Framework Core ve SQLite kullanılarak geliştirilmiş gerçek zamanlı chat API projesidir.
 
-Bu proje; kullanıcı girişi, oda bazlı mesajlaşma, mesaj geçmişi ve SignalR ile gerçek zamanlı iletişim mantığını öğrenmek amacıyla geliştirilmiştir.
+Proje; kullanıcı kimlik doğrulama, oda bazlı mesajlaşma, gerçek zamanlı mesaj gönderimi, online kullanıcı takibi ve temiz hata yönetimi konularını öğrenmek amacıyla geliştirilmiştir.
 
 ## Özellikler
 
 - Kullanıcı kayıt ve giriş sistemi
 - JWT tabanlı kimlik doğrulama
-- BCrypt ile şifre hashleme
 - Oda oluşturma, odaya katılma ve odadan ayrılma
 - SignalR ile gerçek zamanlı mesajlaşma
-- Mesajları veritabanına kaydetme
-- Sayfalama ile mesaj geçmişi getirme
-- Temel okundu bilgisi desteği
+- Mesaj geçmişi ve sayfalama
+- Online kullanıcı takibi
+- Oda bazlı online kullanıcı listesi
+- Global exception middleware
+- Custom exception yapısı
+- FluentValidation ile request doğrulama
+- Swagger JWT desteği
 - Katmanlı mimari
 
-## Kullanılan Teknolojiler
+## Teknolojiler
 
 - ASP.NET Core Web API
 - SignalR
@@ -24,6 +27,8 @@ Bu proje; kullanıcı girişi, oda bazlı mesajlaşma, mesaj geçmişi ve Signal
 - SQLite
 - JWT Bearer Authentication
 - BCrypt.Net
+- FluentValidation
+- Swagger / Swashbuckle
 - C#
 
 ## Proje Yapısı
@@ -32,9 +37,12 @@ Bu proje; kullanıcı girişi, oda bazlı mesajlaşma, mesaj geçmişi ve Signal
 RealtimeChatAPI/
 ├── API/
 │   ├── Controllers/
-│   └── Hubs/
+│   ├── Hubs/
+│   ├── Middleware/
+│   └── Validators/
 ├── Application/
 │   ├── DTOs/
+│   ├── Exceptions/
 │   └── Services/
 ├── Domain/
 │   ├── Entities/
@@ -43,8 +51,35 @@ RealtimeChatAPI/
 │   ├── Data/
 │   ├── Migrations/
 │   └── Repositories/
-├── Program.cs
-└── appsettings.json
+└── Program.cs
+```
+
+## Kurulum
+
+```bash
+git clone https://github.com/berataltinsuyu/realtime-chat-api.git
+cd realtime-chat-api
+dotnet restore
+dotnet ef database update
+dotnet run
+```
+
+Uygulama varsayılan olarak terminalde görünen localhost adresinde çalışır.
+
+```text
+http://localhost:5258
+```
+
+## Swagger
+
+```text
+http://localhost:5258/swagger
+```
+
+JWT gerektiren endpointler için Swagger üzerindeki `Authorize` butonuna token şu formatta girilebilir:
+
+```text
+Bearer {token}
 ```
 
 ## API Endpointleri
@@ -64,12 +99,13 @@ GET /api/rooms
 POST /api/rooms/{id}/join
 POST /api/rooms/{id}/leave
 GET /api/rooms/{id}/members
+GET /api/rooms/{id}/online
 ```
 
 ### Messages
 
 ```http
-GET /api/rooms/{roomId}/messages?page=1&pageSize=20
+GET /api/rooms/{roomId}/messages
 POST /api/rooms/{roomId}/messages
 ```
 
@@ -90,79 +126,33 @@ SendMessage(roomId, content)
 MarkAsRead(roomId)
 ```
 
-Client tarafında dinlenebilen eventler:
+Dinlenebilen eventler:
 
 ```text
 Connected
+UserOnline
+UserOffline
 UserJoinedRoom
 UserLeftRoom
 ReceiveMessage
 MessageRead
 ```
 
-## Kurulum
+## Test
 
-```bash
-git clone https://github.com/berataltinsuyu/realtime-chat-api.git
-cd realtime-chat-api
-dotnet restore
-dotnet ef database update
-dotnet run
-```
+Projede bulunan `test.html` dosyası ile SignalR bağlantısı lokal olarak test edilebilir.
 
-Uygulama terminalde görünen localhost adresinde çalışır.
-
-Örnek:
+Genel test akışı:
 
 ```text
-http://localhost:5258
+1. API'yi çalıştır
+2. Login endpointinden JWT token al
+3. test.html dosyasını aç
+4. Token alanına JWT token'ı yapıştır
+5. Connect butonuna bas
+6. Join Room ile odaya katıl
+7. Send Message ile mesaj gönder
 ```
 
-## Örnek Test
 
-Kullanıcı girişi:
-
-```bash
-curl -X POST http://localhost:5258/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"berat","password":"123456"}'
-```
-
-Token ile oda oluşturma:
-
-```bash
-curl -X POST http://localhost:5258/api/rooms \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"name":"general"}'
-```
-
-Mesaj gönderme:
-
-```bash
-curl -X POST http://localhost:5258/api/rooms/1/messages \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $TOKEN" \
-  -d '{"content":"merhaba realtime chat"}'
-```
-
-## Mevcut Durum
-
-Tamamlananlar:
-
-- Auth sistemi
-- JWT token üretimi
-- Room endpointleri
-- Message endpointleri
-- SignalR ChatHub
-- Mesajların veritabanına kaydedilmesi
-- Basit HTML SignalR test client
-
-Planlananlar:
-
-- Online kullanıcı takibi
-- Global exception middleware
-- FluentValidation
-- Swagger JWT desteği
-- Gelişmiş okundu bilgisi modeli
 

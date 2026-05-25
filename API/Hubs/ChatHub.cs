@@ -52,8 +52,6 @@ public async Task JoinRoom(int roomId)
     {
         var userId = GetCurrentUserId();
 
-        await _roomService.LeaveRoomAsync(roomId, userId);
-
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GetRoomGroupName(roomId));
 
         await Clients.Group(GetRoomGroupName(roomId)).SendAsync("UserLeftRoom", new
